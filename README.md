@@ -1,46 +1,130 @@
-# Getting Started with Create React App
+# Getting Started with React with Reduxjs Toolkit App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app), using the [Redux](https://redux.js.org/) and [Redux Toolkit](https://redux-toolkit.js.org/) TS template.
+[example: Redux Essentials, Part 3: Basic Redux Data Flow](https://redux.js.org/tutorials/essentials/part-3-data-flow)
 
-## Available Scripts
+[example: github](https://github.com/reduxjs/redux-essentials-example-app)
 
-In the project directory, you can run:
+This is a demo React app using Reduxjs-Toolkit.
+We will create a small Posts example.
 
-### `yarn start`
+The correct steps to use the latest reduxjs-toolkit are:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Create a project with redux-typescript template
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- using the `redux-typescript` template to start a project template.
 
-### `yarn test`
+```bash
+yarn create react-app ts-redux-posts --template redux-typescript
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- empty the `/src` folder
+- add back index.tsx/index.css, App.tsx/App.css, react-app-env.d.ts, logo.svg
 
-### `yarn build`
+## Setup Navigation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+[Project Setup](https://redux.js.org/tutorials/essentials/part-3-data-flow#project-setup)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Creating the Posts Slice
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+[Creating the Posts Slice](https://redux.js.org/tutorials/essentials/part-3-data-flow#creating-the-posts-slice)
 
-### `yarn eject`
+[Create a Redux State Slice](https://redux.js.org/tutorials/quick-start#create-a-redux-state-slice)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Create an empty Redux Store
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+We then create a `store` under a folder called `app`.
+We will use the `configureStore({reducer: ...})` from the reduxjs-toolkit to create this store.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- Add Slice Reducers to the Store: [add the counterSlice.reducers to the store](https://redux.js.org/tutorials/quick-start#add-slice-reducers-to-the-store)
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+The store should export the `store`, the `store.dispatch` and the `RootState`:
 
-## Learn More
+```typescript
+export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>;
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+[create a redux store](https://redux.js.org/tutorials/quick-start#create-a-redux-store)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Provide the Redux Store to React
+
+The way to wire the store to the app is to import the `store` and the `Provider` the wrap the store inside of the provider as in:
+
+```typescript
+import App from "./App";
+import { store } from "./app/store";
+import { Provider } from "react-redux";
+
+const el = document.getElementById("root");
+const root = ReactDOM.createRoot(el!);
+root.render(
+  <Provider store={store}>
+    <App />
+  </Provider>
+);
+```
+
+At this time, you should be able start the app with `yarn start` and see the state in the `Redux DevTools`.
+
+[Wire the index.tsx to use `Provider` and `store`](https://redux.js.org/tutorials/quick-start#provide-the-redux-store-to-react)
+
+## Exporting the Redux Hooks
+
+Create a file called `hooks.ts` under the foler `/app`.
+
+Export an app-specific dispatch hook `useAppDispatch` and an app-specific selector hook `useAppSelector`
+
+```typescript
+import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "./store";
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+```
+
+## Create a React component \<PostsList /> using the Redux hooks
+
+[Showing the Posts List](https://redux.js.org/tutorials/essentials/part-3-data-flow#showing-the-posts-list)
+
+- replace a traditional `useState()` with `useAppSelector()` and `useAppDispatch()`.
+
+  - instead of using a state variable `posts`, we will use `useAppSelector()` to get the store value.
+  - instead of using `setPosts` state hook, we will use `useAppDispatch` to call an action.
+
+## Call the Redux component from the \<App />
+
+```typescript
+import Posts from "./pages/Posts";
+
+<Posts />;
+```
+
+## Create a React Component \<AddPostForm /> using the Redux hooks
+
+[Adding New Posts](https://redux.js.org/tutorials/essentials/part-3-data-flow#adding-new-posts)
+
+- instead of using `setPosts` state hook, we will use `useAppDispatch` to call an action.
+
+We will need to add and export necessary reducers in the postsSlice.
+
+```typescript
+const postsSlice = createSlice({
+  name: "posts",
+  initialState,
+  reducers: {
+    postAdded(state, action) {
+      state.push(action.payload);
+    },
+  },
+});
+
+export const { postAdded } = postsSlice.actions;
+```
+
+## Call the Redux component from the \<App />
+
+```typescript
+import AddPostForm from "./pages/AddPostForm";
+
+<AddPostForm />;
+```
